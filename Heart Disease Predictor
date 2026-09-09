@@ -15,7 +15,7 @@ except FileNotFoundError:
     st.error("Error: 'model.pkl' not found. Please place your saved model file in the same directory.")
 
 # 2. Page Configuration and Title
-st.set_page_config(page_title="Heart Disease Predictor", page_icon="❤️")
+st.set_page_config(page_title="Heart Disease Predictor App", page_icon="❤️")
 st.title("❤️ Heart Disease Prediction App")
 st.write("Input patient clinical data below to assess the probability of heart disease.")
 
