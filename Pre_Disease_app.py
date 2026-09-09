@@ -1,0 +1,78 @@
+import streamlit as st
+import joblib
+import pandas as pd
+import numpy as np
+
+# 1. Load the pre-trained model
+@st.cache_resource
+def load_model():
+    # Make sure 'model.pkl' matches your saved model file name
+    return joblib.load('heart_failure_model.pkl.py')
+
+try:
+    model = load_model()
+except FileNotFoundError:
+    st.error("Error: 'model.pkl' not found. Please place your saved model file in the same directory.")
+
+# 2. Page Configuration and Title
+st.set_page_config(page_title="Heart Disease Predictor", page_icon="❤️")
+st.title("❤️ Heart Disease Prediction App")
+st.write("Input patient clinical data below to assess the probability of heart disease.")
+
+# 3. Organise inputs into clean columns
+col1, col2 = st.columns(2)
+
+with col1:
+    age = st.number_input("Age", min_value=1, max_value=120, value=50)
+    sex = st.selectbox("Sex", options=["M", "F"])
+    chest_pain = st.selectbox("Chest Pain Type", options=["TA", "ATA", "NAP", "ASY"])
+    resting_bp = st.number_input("Resting Blood Pressure (mm Hg)", min_value=50, max_value=250, value=120)
+    cholesterol = st.number_input("Serum Cholesterol (mm/dl)", min_value=0, max_value=600, value=200)
+    fasting_bs = st.selectbox("Fasting Blood Sugar > 120 mg/dl", options=[0, 1], format_func=lambda x: "True (1)" if x == 1 else "False (0)")
+
+with col2:
+    resting_ecg = st.selectbox("Resting ECG Results", options=["Normal", "ST", "LVH"])
+    max_hr = st.number_input("Maximum Heart Rate Achieved (70-202)", min_value=60, max_value=220, value=150)
+    exercise_angina = st.selectbox("Exercise Induced Angina", options=["Y", "N"])
+    oldpeak = st.number_input("ST Depression Induced by Exercise (Oldpeak)", min_value=0.0, max_value=10.0, value=0.0, step=0.1)
+    st_slope = st.selectbox("Slope of the Peak Exercise ST Segment", options=["Up", "Flat", "Down"])
+
+# 4. Handle Prediction
+if st.button("Predict Heart Disease Risk", type="primary"):
+    
+    # --- ENCODING DICTIONARIES ---
+    # Adjust these numbers if your training script used a different order!
+    sex_mapping = {"M": 1, "F": 0}
+    chest_pain_mapping = {"TA": 0, "ATA": 1, "NAP": 2, "ASY": 3}
+    resting_ecg_mapping = {"Normal": 0, "ST": 1, "LVH": 2}
+    exercise_angina_mapping = {"N": 0, "Y": 1}
+    st_slope_mapping = {"Up": 0, "Flat": 1, "Down": 2}
+    
+    try:
+        # Convert text selections into numbers before sending to the model
+        input_df = pd.DataFrame([{
+            'Age': age,
+            'Sex': sex_mapping[sex],
+            'ChestPainType': chest_pain_mapping[chest_pain],
+            'RestingBP': resting_bp,
+            'Cholesterol': cholesterol,
+            'FastingBS': fasting_bs,
+            'RestingECG': resting_ecg_mapping[resting_ecg],
+            'MaxHR': max_hr,
+            'ExerciseAngina': exercise_angina_mapping[exercise_angina],
+            'Oldpeak': oldpeak,
+            'ST_Slope': st_slope_mapping[st_slope]
+        }])
+        
+        # Generate prediction
+        prediction = model.predict(input_df)
+        
+        # Display Results
+        st.subheader("Results:")
+        if prediction[0] == 1:
+            st.error("🚨 Warning: The model indicates a high probability of **Heart Disease**.")
+        else:
+            st.success("✅ Good News: The model indicates a low probability of **Heart Disease**.")
+            
+    except Exception as e:
+        st.error(f"Prediction failed. Error: {e}")
