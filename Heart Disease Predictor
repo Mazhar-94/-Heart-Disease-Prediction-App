@@ -7,7 +7,7 @@ import numpy as np
 @st.cache_resource
 def load_model():
     # Make sure 'model.pkl' matches your saved model file name
-    return joblib.load('Heart Disease Predictor.app.py')
+    return joblib.load('app.py')
 
 try:
     model = load_model()
